@@ -36,7 +36,7 @@ async def user_1(message: types.Message):
 @dp.message_handler(lambda message: 'tumani' in message.text)
 async def user_2(message: types.Message):
     button = message.text.split(' ')[0]
-    rp = requests.get(url=f'http://127.0.0.1:8000/main/clinic?name={button}')
+    rp = requests.get(url=f'http://185.196.213.44/main/clinic?name={button}')
     print(button)
     res = rp.json()
     print(res)
@@ -66,7 +66,7 @@ async def process_input_handler(message: types.Message, state: FSMContext):
     if user_text == "⬆Bosh Menyu":
         await state.finish()
         return await bot_start(message)
-    rp = requests.get(url=f'http://127.0.0.1:8000/main/list?text={user_text}')
+    rp = requests.get(url=f'http://185.196.213.44/main/list?text={user_text}')
     res = rp.json()
     print(len(res))
     if len(res) == 0:
@@ -92,7 +92,7 @@ async def recursive_function(message: types.Message):
 @dp.message_handler(regexp=r'^(\d+)\.')
 async def button_handler(message: types.Message):
     button_index = int(re.match(r'^(\d+)\.', message.text).group(1))
-    rp = requests.get(url=f'http://127.0.0.1:8000/main/drug/{button_index}/')
+    rp = requests.get(url=f'http://185.196.213.44/main/drug/{button_index}/')
     res = rp.json()
     msg = drug_msg(res['name'], res['owner'], res['price'], res['expire'])
     keyboard = InlineKeyboardMarkup(row_width=1)
@@ -106,7 +106,7 @@ async def button_handler(message: types.Message):
 async def add_product_callback(callback_query: types.CallbackQuery):
     product_id = callback_query.data.split(' ')[1]
     keyboard = InlineKeyboardMarkup(row_width=1)
-    rp = requests.get(url=f'http://127.0.0.1:8000/main/drug/{product_id}/')
+    rp = requests.get(url=f'http://185.196.213.44/main/drug/{product_id}/')
     res = rp.json()
 
     cart.add_product(res['id'], res['name'], res['price'])
