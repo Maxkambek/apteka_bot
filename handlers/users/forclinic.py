@@ -14,6 +14,7 @@ from loader import dp
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.types.chat import ChatActions
 from .my_tools import ShoppingCart
+from .start import bot_start, type_user
 from .text import bot_text, drug_msg
 from geopy.geocoders import Nominatim
 
@@ -27,30 +28,33 @@ class MyStates(StatesGroup):
     state2 = State()
 
 
-@dp.message_handler(Command("start"))
-async def bot_start(message: types.Message):
-    await message.answer(bot_text['text_1'], reply_markup=menu)
+@dp.message_handler(text="Shifoxonalar")
+async def user_1(message: types.Message):
+    await message.answer(bot_text['text_3'], reply_markup=hospital_keyboard)
 
 
-@dp.message_handler(text=["🔍 Dori Izlash", 'Orqaga qaytish'])
-async def type_user(message: types.Message):
-    await message.answer(bot_text['text_2'], reply_markup=type_keyboard)
-
-
-@dp.message_handler(text="Uyimga")
+@dp.message_handler(lambda message: 'tumani' in message.text)
 async def user_2(message: types.Message):
+    button = message.text.split(' ')[0]
+    rp = requests.get(url=f'http://127.0.0.1:8000/main/clinic?name={button}')
+    print(button)
+    res = rp.json()
+    print(res)
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    for i in res:
+        index = i['id']
+        keyboard.add(InlineKeyboardButton(text=i['name'], callback_data=f'clinic {index}'))
+    keyboard.add(InlineKeyboardButton("Orqaga qaytish", callback_data="orqaga qaytish"))
+    await message.answer("Iltimos Shifoxonalar ro'yhatidan tanlang!", reply_markup=keyboard)
+    await message.answer(
+        "Agar shifoxonangizni topa olmasangiz bosh menu dagi aloqa raqamlari orqali bizga murojaat qilishingizni so'raymiz",
+        reply_markup=back)
+
+
+@dp.callback_query_handler(lambda c: c.data.startswith('clinic'))
+async def for_drug_search(c: types.CallbackQuery):
     await MyStates.state1.set()
-    await message.answer(bot_text['text_4'], reply_markup=back)
-
-
-@dp.message_handler(text=['⬆Bosh Menyu'])
-async def back_1(message: types.Message):
-    await message.answer(bot_text['text_1'], reply_markup=menu)
-
-
-@dp.message_handler(text=['⬅Orqaga'])
-async def back_2(message: types.Message):
-    await message.answer(bot_text['text_2'], reply_markup=type_keyboard)
+    await dp.bot.send_message(chat_id=c.message.chat.id, text=bot_text['text_4'], reply_markup=back)
 
 
 @dp.message_handler(state=MyStates.state1)
@@ -159,7 +163,7 @@ async def button_handler(message: types.Message, state: FSMContext):
         text += f'\n\n<b>Umumiy narxi:</b> {total_cart} sum'
         keyboard = InlineKeyboardMarkup(row_width=1)
         keyboard.add(
-            InlineKeyboardButton('Davom etish', callback_data=f'toOrder')
+            InlineKeyboardButton('Davom etish', callback_data=f'toPayment')
         )
         await message.answer(text, reply_markup=keyboard)
 
